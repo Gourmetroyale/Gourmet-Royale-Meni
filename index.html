@@ -190,6 +190,20 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:40px}
 .abar-in .st{flex:1 1 160px;color:var(--muted);font-size:13px;min-width:0}
 .abar-in .save{border:0;background:var(--gold);color:var(--wine);font-weight:800;border-radius:999px;padding:12px 22px;min-height:46px;cursor:pointer}
 .abar-in .save:disabled{opacity:.5;cursor:wait}
+/* four tabs: scroll sideways on small phones */
+.tabs{display:flex;overflow-x:auto;max-width:680px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1 0 auto;padding:11px 16px;white-space:nowrap}
+/* appetizers */
+.sec2{margin-top:34px}
+.day.app{grid-template-columns:minmax(0,1fr) auto;padding:14px 16px}
+.day.app .aprice{color:var(--gold);font-weight:800;margin-top:4px}
+@media (max-width:480px){.day.app{grid-template-columns:minmax(0,1fr) auto}.day.app .ctl{grid-column:auto}}
+/* build-your-own bars (healthy, pasta) */
+.barcard{background:radial-gradient(circle at 50% 30%, #4E1B25, var(--wine-4) 70%);border:1px solid var(--gold-soft);border-radius:22px;padding:14px 16px;
+  position:sticky;top:calc(env(safe-area-inset-top,0px) + 66px);z-index:4;box-shadow:0 14px 30px rgba(0,0,0,.4)}
+@media (min-width:820px){.barcard{order:2;top:calc(env(safe-area-inset-top,0px) + 84px);padding:18px}}
+.opt.plain{min-height:54px;padding:10px 12px}
 </style>
 <div class="wrap" data-gr="">
   <header>
@@ -202,6 +216,8 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:40px}
 
   <div class="tabs" role="tablist" aria-label="Menu sections">
     <button class="tab" role="tab" id="tab-plat" aria-controls="panel-plat" aria-selected="true">Plat du Jour</button>
+    <button class="tab" role="tab" id="tab-healthy" aria-controls="panel-healthy" aria-selected="false">Healthy Bar</button>
+    <button class="tab" role="tab" id="tab-pasta" aria-controls="panel-pasta" aria-selected="false">Pasta Bar</button>
     <button class="tab" role="tab" id="tab-salad" aria-controls="panel-salad" aria-selected="false">Salad Bar</button>
   </div>
 
@@ -209,7 +225,12 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:40px}
     <h2>Plat du Jour</h2>
     <p class="lead">A homemade dish every weekday, delivered hot to your office. <span class="price-tag">Delivery included</span></p>
     <div class="days" id="days"></div>
+    <h2 class="sec2" id="appsH">Appetizers</h2>
+    <div class="days" id="apps"></div>
   </section>
+
+  <section id="panel-healthy" role="tabpanel" aria-labelledby="tab-healthy" hidden=""><div id="bar-healthy"></div></section>
+  <section id="panel-pasta" role="tabpanel" aria-labelledby="tab-pasta" hidden=""><div id="bar-pasta"></div></section>
 
   <section id="panel-salad" role="tabpanel" aria-labelledby="tab-salad" hidden="">
     <h2>Build your salad</h2>
@@ -281,7 +302,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:40px}
     </div>
   </div>
 </div>
-<script type="application/json" id="menu-data" data-gr="">{"phone":"9613869839","phoneLabel":"+961 3 869 839","maxItems":7,"week":[{"id":"w1","day":"Mon","date":"9 Nov","dish":"Shrimp Carry ","desc":"Serving with white rice ","price":8,"show":true},{"id":"w2","day":"Tue","date":"10 Nov","dish":"Mloukhieh","desc":"With chicken, vermicelli rice, lemon and onion vinegar","price":10,"show":false},{"id":"w3","day":"Wed","date":"11 Nov","dish":"Kafta bil Saniyeh","desc":"Oven kafta with potatoes and tomato, with rice","price":10,"show":false},{"id":"w4","day":"Thu","date":"12 Nov","dish":"Fasolia w Riz","desc":"White bean and meat stew with vermicelli rice","price":10,"show":false},{"id":"w5","day":"Fri","date":"13 Nov","dish":"Sayadieh","desc":"Fish with caramelised onion rice and tarator","price":10,"show":false}],"sizes":[{"id":"side","name":"Side salad","desc":"A lighter bowl, perfect with your plat du jour","price":4,"show":true},{"id":"full","name":"Full portion","desc":"A full meal bowl","price":6,"show":true}],"veg":[{"id":"v1","name":"Lettuce mix","pic":"lettuce","price":0,"show":true},{"id":"v2","name":"Rocca","pic":"rocca","price":0,"show":true},{"id":"v3","name":"Spinach","pic":"spinach","price":0,"show":true},{"id":"v4","name":"Kale & cabbage","pic":"kale","price":0,"show":true},{"id":"v5","name":"Quinoa","pic":"quinoa","price":0,"show":true},{"id":"v6","name":"Burghul","pic":"burghul","price":0,"show":true},{"id":"v7","name":"Tomato","pic":"tomato","price":0,"show":true},{"id":"v8","name":"Cucumber","pic":"cucumber","price":0,"show":true},{"id":"v9","name":"Carrot","pic":"carrot","price":0,"show":true},{"id":"v10","name":"Corn","pic":"corn","price":0,"show":true},{"id":"v11","name":"Red cabbage","pic":"cabbage","price":0,"show":true},{"id":"v12","name":"Black olives","pic":"olives","price":0,"show":true},{"id":"v13","name":"Red onion","pic":"onion","price":0,"show":true},{"id":"v14","name":"Sweet pepper","pic":"pepper","price":0,"show":true},{"id":"v15","name":"Radish","pic":"radish","price":0,"show":true},{"id":"v16","name":"Beetroot","pic":"beet","price":0,"show":true},{"id":"v17","name":"Chickpeas","pic":"chickpea","price":0,"show":true},{"id":"v18","name":"Mint & parsley","pic":"herbs","price":0,"show":true},{"id":"v19","name":"Pickled turnip","pic":"turnip","price":0,"show":true},{"id":"v20","name":"Pomegranate","pic":"pomegranate","price":0,"show":true}],"pro":[{"id":"p1","name":"Grilled chicken","pic":"chicken","price":3,"show":true},{"id":"p2","name":"Tuna","pic":"tuna","price":2.5,"show":true},{"id":"p3","name":"Grilled halloumi","pic":"halloumi","price":2.5,"show":true},{"id":"p4","name":"Boiled egg","pic":"egg","price":1,"show":true},{"id":"p5","name":"Shrimp","pic":"shrimp","price":4,"show":true}],"ext":[{"id":"e1","name":"Avocado","pic":"avocado","price":1.5,"show":true},{"id":"e2","name":"Feta","pic":"feta","price":1,"show":true},{"id":"e3","name":"Parmesan","pic":"parmesan","price":1,"show":true},{"id":"e4","name":"Walnuts","pic":"walnut","price":1,"show":true},{"id":"e5","name":"Croutons","pic":"crouton","price":0.5,"show":true},{"id":"e6","name":"Fried bread (fattoush)","pic":"bread","price":0.5,"show":true}],"dr":[{"id":"d1","name":"Lemon & olive oil","color":"#E6D96E","show":true},{"id":"d2","name":"Pomegranate molasses","color":"#6A1622","show":true},{"id":"d3","name":"Balsamic","color":"#3A1C17","show":true},{"id":"d4","name":"Honey mustard","color":"#E0AC2E","show":true},{"id":"d5","name":"Caesar","color":"#F1E3BD","show":true},{"id":"d6","name":"Tahini","color":"#D7BF93","show":true},{"id":"d7","name":"Yogurt & mint","color":"#EEF2DF","show":true}]}</script>
+<script type="application/json" id="menu-data" data-gr="">{"phone":"9613869839","phoneLabel":"+961 3 869 839","maxItems":7,"week":[{"id":"w1","day":"Mon","date":"9 Nov","dish":"Shrimp Carry ","desc":"Serving with white rice ","price":8,"show":true},{"id":"w2","day":"Tue","date":"10 Nov","dish":"Mloukhieh","desc":"With chicken, vermicelli rice, lemon and onion vinegar","price":10,"show":false},{"id":"w3","day":"Wed","date":"11 Nov","dish":"Kafta bil Saniyeh","desc":"Oven kafta with potatoes and tomato, with rice","price":10,"show":false},{"id":"w4","day":"Thu","date":"12 Nov","dish":"Fasolia w Riz","desc":"White bean and meat stew with vermicelli rice","price":10,"show":false},{"id":"w5","day":"Fri","date":"13 Nov","dish":"Sayadieh","desc":"Fish with caramelised onion rice and tarator","price":10,"show":false}],"sizes":[{"id":"side","name":"Side salad","desc":"A lighter bowl, perfect with your plat du jour","price":4,"show":true},{"id":"full","name":"Full portion","desc":"A full meal bowl","price":6,"show":true}],"veg":[{"id":"v1","name":"Lettuce mix","pic":"lettuce","price":0,"show":true},{"id":"v2","name":"Rocca","pic":"rocca","price":0,"show":true},{"id":"v3","name":"Spinach","pic":"spinach","price":0,"show":true},{"id":"v4","name":"Kale & cabbage","pic":"kale","price":0,"show":true},{"id":"v5","name":"Quinoa","pic":"quinoa","price":0,"show":true},{"id":"v6","name":"Burghul","pic":"burghul","price":0,"show":true},{"id":"v7","name":"Tomato","pic":"tomato","price":0,"show":true},{"id":"v8","name":"Cucumber","pic":"cucumber","price":0,"show":true},{"id":"v9","name":"Carrot","pic":"carrot","price":0,"show":true},{"id":"v10","name":"Corn","pic":"corn","price":0,"show":true},{"id":"v11","name":"Red cabbage","pic":"cabbage","price":0,"show":true},{"id":"v12","name":"Black olives","pic":"olives","price":0,"show":true},{"id":"v13","name":"Red onion","pic":"onion","price":0,"show":true},{"id":"v14","name":"Sweet pepper","pic":"pepper","price":0,"show":true},{"id":"v15","name":"Radish","pic":"radish","price":0,"show":true},{"id":"v16","name":"Beetroot","pic":"beet","price":0,"show":true},{"id":"v17","name":"Chickpeas","pic":"chickpea","price":0,"show":true},{"id":"v18","name":"Mint & parsley","pic":"herbs","price":0,"show":true},{"id":"v19","name":"Pickled turnip","pic":"turnip","price":0,"show":true},{"id":"v20","name":"Pomegranate","pic":"pomegranate","price":0,"show":true}],"pro":[{"id":"p1","name":"Grilled chicken","pic":"chicken","price":3,"show":true},{"id":"p2","name":"Tuna","pic":"tuna","price":2.5,"show":true},{"id":"p3","name":"Grilled halloumi","pic":"halloumi","price":2.5,"show":true},{"id":"p4","name":"Boiled egg","pic":"egg","price":1,"show":true},{"id":"p5","name":"Shrimp","pic":"shrimp","price":4,"show":true}],"ext":[{"id":"e1","name":"Avocado","pic":"avocado","price":1.5,"show":true},{"id":"e2","name":"Feta","pic":"feta","price":1,"show":true},{"id":"e3","name":"Parmesan","pic":"parmesan","price":1,"show":true},{"id":"e4","name":"Walnuts","pic":"walnut","price":1,"show":true},{"id":"e5","name":"Croutons","pic":"crouton","price":0.5,"show":true},{"id":"e6","name":"Fried bread (fattoush)","pic":"bread","price":0.5,"show":true}],"dr":[{"id":"d1","name":"Lemon & olive oil","color":"#E6D96E","show":true},{"id":"d2","name":"Pomegranate molasses","color":"#6A1622","show":true},{"id":"d3","name":"Balsamic","color":"#3A1C17","show":true},{"id":"d4","name":"Honey mustard","color":"#E0AC2E","show":true},{"id":"d5","name":"Caesar","color":"#F1E3BD","show":true},{"id":"d6","name":"Tahini","color":"#D7BF93","show":true},{"id":"d7","name":"Yogurt & mint","color":"#EEF2DF","show":true}],"appetizers":[{"id":"a1","name":"Cheese rolls","price":4,"show":true,"desc":""},{"id":"a2","name":"Kibbeh","price":5,"show":true,"desc":""},{"id":"a3","name":"Warak enab bi zeit","price":5,"show":true,"desc":""},{"id":"a4","name":"Fattoush","price":5,"show":true,"desc":""},{"id":"a5","name":"Tabbouleh","price":5,"show":true,"desc":""},{"id":"a6","name":"Hummus bi tahini","price":4,"show":true,"desc":""},{"id":"a7","name":"Batata harra","price":4,"show":true,"desc":""},{"id":"a8","name":"French fries","price":3,"show":true,"desc":""},{"id":"a9","name":"Curly fries","price":3.5,"show":true,"desc":""},{"id":"a10","name":"Mozzarella sticks","price":5,"show":true,"desc":""}],"bars":[{"id":"healthy","title":"Healthy Bar","lead":"Build your healthy plate: choose your main, then your sides.","base":0,"steps":[{"id":"main","title":"Main","min":1,"max":1,"plus":false,"items":[{"id":"hm1","name":"Fillet","price":12,"show":true},{"id":"hm2","name":"Chicken breast","price":9,"show":true},{"id":"hm3","name":"Roast beef","price":11,"show":true},{"id":"hm4","name":"Shrimp","price":12,"show":true}]},{"id":"sides","title":"Sides","min":1,"max":4,"inc":2,"extra":2,"items":[{"id":"hs1","name":"Grilled veggies sauté","price":0,"show":true},{"id":"hs2","name":"Mashed potatoes","price":0,"show":true},{"id":"hs3","name":"Chicken fried rice","price":0,"show":true},{"id":"hs4","name":"Shrimp fried rice","price":0,"show":true}]}]},{"id":"pasta","title":"Pasta Bar","lead":"Your pasta bowl with the sauce you like, plus toppings.","base":7,"steps":[{"id":"sauce","title":"Sauce","min":1,"max":1,"items":[{"id":"ps1","name":"Pesto","price":0,"show":true},{"id":"ps2","name":"Alfredo","price":0,"show":true},{"id":"ps3","name":"Arrabbiata","price":0,"show":true}]},{"id":"add","title":"Add","min":0,"max":3,"items":[{"id":"pa1","name":"Shrimp","price":4,"show":true},{"id":"pa2","name":"Chicken","price":3,"show":true},{"id":"pa3","name":"Parmesan","price":1,"show":true}]}]}]}</script>
 <script data-gr="">
 /* the page as written, captured before anything changes it, so the back office can republish it with new menu data */
 const PRISTINE = [...document.body.children].filter(n => n.hasAttribute('data-gr')).map(n => n.outerHTML).join('\n');
@@ -715,7 +736,7 @@ function renderCart(){
   refreshDays();
 }
 function refreshDays(){
-  document.querySelectorAll('#days .ctl').forEach(ctl => {
+  document.querySelectorAll('.ctl').forEach(ctl => {
     const it = ctl._item, line = cart.find(c => c.key === it.key), q = line ? line.qty : 0;
     if (ctl.dataset.q === String(q)) return;
     const hadFocus = ctl.contains(document.activeElement);
@@ -777,6 +798,93 @@ document.getElementById('send').addEventListener('click', e => {
 let tt;
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 1800); }
 
+
+/* ---------- appetizers ---------- */
+function renderApps(){
+  const box = document.getElementById('apps'); if (!box) return;
+  const list = shown(DATA.appetizers);
+  document.getElementById('appsH').hidden = !list.length;
+  list.forEach(a => {
+    const el = document.createElement('div'); el.className = 'day app';
+    el.innerHTML = `<div class="dinfo"><h3>${esc(a.name)}</h3>${a.desc ? `<p>${esc(a.desc)}</p>` : ''}</div><div class="ctl"></div>`;
+    el.querySelector('.ctl')._item = {key:'app-' + a.id, name:a.name, desc:a.desc || '', price:+a.price};
+    box.appendChild(el);
+  });
+}
+
+/* ---------- build-your-own bars (healthy, pasta) ---------- */
+const BARS = (DATA.bars || []).map(b => ({...b, steps:(b.steps || []).map(st => ({...st, items:shown(st.items)}))}));
+const barSel = {};
+const barItem = (bar, id) => { for (const st of bar.steps) { const f = st.items.find(i => i.id === id); if (f) return f; } return null; };
+function barPrice(bar){
+  let p = +bar.base || 0;
+  bar.steps.forEach(st => { const ids = barSel[bar.id][st.id]; ids.forEach(id => p += +barItem(bar, id).price || 0); if (st.inc != null) p += Math.max(0, ids.length - st.inc) * (+st.extra || 0); });
+  return p;
+}
+function barDesc(bar){
+  return bar.steps.filter(st => barSel[bar.id][st.id].length).map(st => {
+    const ids = barSel[bar.id][st.id], ex = st.inc != null ? ids.length - st.inc : 0;
+    return `${st.title}: ${ids.map(id => barItem(bar, id).name).join(', ')}${ex > 0 ? ` (${ex} extra)` : ''}`;
+  }).join(' · ');
+}
+function barToggle(bar, st, id){
+  const arr = barSel[bar.id][st.id];
+  if (arr.includes(id)) barSel[bar.id][st.id] = arr.filter(x => x !== id);
+  else if (st.max === 1) barSel[bar.id][st.id] = [id];
+  else if (arr.length < st.max) arr.push(id);
+  updateBar(bar);
+}
+function updateBar(bar){
+  const host = document.getElementById('bar-' + bar.id); if (!host) return;
+  bar.steps.forEach(st => {
+    const ids = barSel[bar.id][st.id], count = ids.length;
+    host.querySelectorAll(`.opt[data-step="${st.id}"]`).forEach(b => {
+      const on = ids.includes(b.dataset.id);
+      b.setAttribute('aria-pressed', on);
+      b.disabled = !on && st.max > 1 && count >= st.max;
+    });
+    const rule = host.querySelector(`[data-rule="${st.id}"]`); if (!rule) return;
+    if (st.inc != null){ const ex = count - st.inc; rule.textContent = ex > 0 ? `${count} picked · ${ex} extra (+${money(ex * (+st.extra || 0))})` : `${st.inc} included · then +${money(+st.extra || 0)} each`; rule.classList.toggle('warn', ex > 0); }
+    else rule.textContent = st.max === 1 ? (st.min ? 'Pick 1' : 'Optional, pick 1') : (st.min ? `Pick ${st.min} or more` : 'Optional');
+  });
+  const missing = bar.steps.find(st => st.items.length && barSel[bar.id][st.id].length < (st.min || 0));
+  const any = bar.steps.some(st => barSel[bar.id][st.id].length);
+  host.querySelector('[data-price]').textContent = any ? money(barPrice(bar)) : (bar.base ? 'From ' + money(+bar.base) : '$0');
+  const names = bar.steps.flatMap(st => barSel[bar.id][st.id].map(id => barItem(bar, id).name));
+  host.querySelector('[data-chips]').textContent = names.length ? names.join(' · ') : 'Nothing picked yet. Start with step 1.';
+  const btn = host.querySelector('[data-add]');
+  btn.disabled = !!missing || !any;
+  btn.textContent = missing ? `Choose your ${missing.title.toLowerCase()}` : 'Add to order';
+}
+function renderBars(){
+  BARS.forEach(bar => {
+    const host = document.getElementById('bar-' + bar.id); if (!host) return;
+    barSel[bar.id] = {}; bar.steps.forEach(st => barSel[bar.id][st.id] = []);
+    host.innerHTML = `<h2>${esc(bar.title)}</h2><p class="lead">${esc(bar.lead || '')}${bar.base ? ` <span class="price-tag">From ${money(+bar.base)}</span>` : ''}</p>
+      <div class="builder"><div class="barcard"><div class="binfo"><div class="brow"><span class="lbl">${esc(bar.title)}</span><span class="amt" data-price>$0</span></div><div class="chips" data-chips></div><button class="addsalad" type="button" data-add disabled>Add to order</button></div></div><div class="steps" data-steps></div></div>`;
+    const box = host.querySelector('[data-steps]');
+    bar.steps.forEach((st, si) => {
+      if (!st.items.length) return;
+      const w = document.createElement('div'); w.className = 'step';
+      w.innerHTML = `<div class="step-h"><h3><small>Step ${si+1}</small>${esc(st.title)}</h3><span class="rule" data-rule="${esc(st.id)}"></span></div><div class="opts"></div>`;
+      st.items.forEach(it => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'opt plain';
+        b.dataset.id = it.id; b.dataset.step = st.id;
+        const p = +it.price || 0;
+        b.innerHTML = `<span class="t">${esc(it.name)}${p ? `<span class="p">${st.plus === false ? money(p) : '+' + money(p)}</span>` : ''}</span><span class="ck" aria-hidden="true">✓</span>`;
+        b.addEventListener('click', () => barToggle(bar, st, it.id));
+        w.lastElementChild.appendChild(b);
+      });
+      box.appendChild(w);
+    });
+    host.querySelector('[data-add]').addEventListener('click', () => {
+      addToCart({key:bar.id + '-' + Date.now(), name:bar.title, desc:barDesc(bar), price:barPrice(bar), salad:true});
+      bar.steps.forEach(st => barSel[bar.id][st.id] = []); updateBar(bar);
+    });
+    updateBar(bar);
+  });
+}
+
 /* ---------- back office (owner only) ---------- */
 let ART = null, W = null, aTab = 'week', dirty = false;
 const ASECT = [
@@ -788,6 +896,8 @@ const ASECT = [
   {id:'dr', label:'Dressings', fields:[['name','Name','text'],['color','Colour','color']], blank:() => ({name:'New dressing', color:'#E6D96E', show:true})},
   {id:'settings', label:'Settings'}
 ];
+ASECT.splice(1, 0, {id:'appetizers', label:'Appetizers', fields:[['name','Name','text'],['price','Price $','number'],['desc','Description','text','wide']], list:w => (w.appetizers = w.appetizers || []), blank:() => ({name:'New appetizer', price:4, desc:'', show:true})});
+(DATA.bars || []).forEach((bar, bi) => (bar.steps || []).forEach((st, si) => ASECT.splice(ASECT.length - 1, 0, {id:`bar${bi}s${si}`, label:`${bar.title}: ${st.title}`, fields:[['name','Name','text'],['price','Price $','number']], list:w => w.bars[bi].steps[si].items, blank:() => ({name:'New item', price:0, show:true})})));
 function markDirty(){ dirty = true; document.getElementById('astatus').textContent = 'Unsaved changes'; }
 function renderATabs(){
   const box = document.getElementById('atabs'); box.innerHTML = '';
@@ -815,9 +925,21 @@ function renderASection(){
     row.querySelector('#as-phone').oninput = e => { W.phone = e.target.value.replace(/\D/g,''); markDirty(); };
     row.querySelector('#as-plabel').oninput = e => { W.phoneLabel = e.target.value; markDirty(); };
     row.querySelector('#as-max').oninput = e => { W.maxItems = Math.max(1, +e.target.value || 7); markDirty(); };
-    box.appendChild(row); return;
+    box.appendChild(row);
+    (W.bars || []).forEach((bar, bi) => {
+      const r = document.createElement('div'); r.className = 'arow';
+      let h = `<label for="as-b${bi}">${esc(bar.title)} starting price $<input id="as-b${bi}" type="number" min="0" step="0.25" inputmode="decimal" value="${esc(bar.base ?? 0)}"></label>`;
+      bar.steps.forEach((st, si) => { if (st.inc != null) h += `<label for="as-b${bi}i${si}">${esc(st.title)} included<input id="as-b${bi}i${si}" type="number" min="0" max="10" value="${esc(st.inc)}"></label><label for="as-b${bi}x${si}">Each extra ${esc(st.title.toLowerCase())} $<input id="as-b${bi}x${si}" type="number" min="0" step="0.25" inputmode="decimal" value="${esc(st.extra ?? 0)}"></label>`; });
+      r.innerHTML = h;
+      r.querySelector(`#as-b${bi}`).oninput = e => { bar.base = Math.max(0, parseFloat(e.target.value) || 0); markDirty(); };
+      bar.steps.forEach((st, si) => { if (st.inc == null) return;
+        r.querySelector(`#as-b${bi}i${si}`).oninput = e => { st.inc = Math.max(0, parseInt(e.target.value) || 0); markDirty(); };
+        r.querySelector(`#as-b${bi}x${si}`).oninput = e => { st.extra = Math.max(0, parseFloat(e.target.value) || 0); markDirty(); }; });
+      box.appendChild(r);
+    });
+    return;
   }
-  const list = W[sect.id];
+  const list = sect.list ? sect.list(W) : W[sect.id];
   const rows = document.createElement('div'); rows.className = 'arows';
   list.forEach((it, idx) => {
     const row = document.createElement('div'); row.className = 'arow' + (it.show === false ? ' off' : '');
@@ -912,7 +1034,7 @@ function buildDoc(data){
 async function saveAdmin(){
   const btn = document.getElementById('aSave'), st = document.getElementById('astatus');
   if (!ART){
-    for (const s of ['week','sizes','veg','pro','ext','dr']) W[s] = W[s].filter(i => String(i.name ?? i.dish ?? '').trim());
+    for (const s of ['week','appetizers','sizes','veg','pro','ext','dr']) W[s] = (W[s] || []).filter(i => String(i.name ?? i.dish ?? '').trim());
     const json = JSON.stringify(W).replace(/</g, '\\u003c');
     const body = PRISTINE.replace(/(<script[^>]*id="menu-data"[^>]*>)[\s\S]*?(<\/script>)/, (m, a, b) => a + json + b);
     const html = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">\n<meta property="og:title" content="Gourmet Royale Menu">\n<style>' + RESET + '</style>\n</head>\n<body>\n' + body + '\n</body>\n</html>\n';
@@ -924,7 +1046,7 @@ async function saveAdmin(){
     } catch (e) { st.textContent = 'The download did not start. Try again in Safari.'; }
     return;
   }
-  for (const s of ['week','sizes','veg','pro','ext','dr']) W[s] = W[s].filter(i => String(i.name ?? i.dish ?? '').trim());
+  for (const s of ['week','appetizers','sizes','veg','pro','ext','dr']) W[s] = (W[s] || []).filter(i => String(i.name ?? i.dish ?? '').trim());
   btn.disabled = true; st.textContent = 'Saving…';
   try { await ART.publish(buildDoc(W)); st.textContent = 'Saved. Customers now see the new menu.'; }
   catch (e) {
@@ -950,7 +1072,7 @@ document.getElementById('aSave').addEventListener('click', saveAdmin);
 })();
 
 /* ---------- start ---------- */
-renderDays(); buildSteps(); updateSalad(); renderCart();
+renderDays(); renderApps(); renderBars(); buildSteps(); updateSalad(); renderCart();
 let start = 'salad';
 try{ start = localStorage.getItem('gr-tab') || 'salad' }catch(e){}
 showTab(start === 'plat' ? 'plat' : 'salad');
