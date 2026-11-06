@@ -858,7 +858,39 @@ function renderASection(){
   add.onclick = () => { list.push({id: sect.id[0] + Date.now().toString(36), ...sect.blank()}); markDirty(); renderASection(); const ins = box.querySelectorAll('.arow'); ins[ins.length-1]?.querySelector('input')?.focus(); };
   box.appendChild(add);
 }
+/* back office login (username + password) */
+const ADMIN_HASH = '62142541f12bf62feed56dbe0280039fbe0541a05f518f15ee2a7c2568294825';
+let authed = false;
+try { authed = sessionStorage.getItem('gr-admin') === ADMIN_HASH; } catch (e) {}
+async function sha256(t){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join(''); }
+function askLogin(){
+  if (document.getElementById('grLogin')) return;
+  const box = document.createElement('div');
+  box.id = 'grLogin'; box.className = 'admin';
+  box.innerHTML = `<div class="admin-in" style="max-width:420px;padding-top:40px">
+    <div class="admin-h"><h2>Back office</h2><button class="secondary" type="button" id="lgClose">Close</button></div>
+    <p class="note">Enter your username and password.</p>
+    <form id="lgForm" class="form">
+      <label for="lgUser">Username<input id="lgUser" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+      <label for="lgPass">Password<input id="lgPass" type="password" autocomplete="current-password"></label>
+      <button class="addsalad" type="submit">Log in</button>
+      <p class="hint warnhint" id="lgErr" hidden>Wrong username or password. Try again.</p>
+    </form></div>`;
+  document.body.appendChild(box); document.body.style.overflow = 'hidden';
+  const close = () => { box.remove(); document.body.style.overflow = ''; };
+  box.querySelector('#lgClose').onclick = close;
+  box.querySelector('#lgForm').onsubmit = async e => {
+    e.preventDefault();
+    const u = box.querySelector('#lgUser').value.trim().toLowerCase(), p = box.querySelector('#lgPass').value;
+    if (await sha256(u + ':' + p) === ADMIN_HASH){
+      authed = true; try { sessionStorage.setItem('gr-admin', ADMIN_HASH); } catch (e) {}
+      close(); openAdmin();
+    } else { box.querySelector('#lgErr').hidden = false; box.querySelector('#lgPass').value = ''; }
+  };
+  setTimeout(() => box.querySelector('#lgUser').focus(), 50);
+}
 function openAdmin(){
+  if (!authed){ askLogin(); return; }
   W = JSON.parse(JSON.stringify(DATA)); dirty = false;
   document.getElementById('astatus').textContent = ART ? 'No changes yet' : 'Checking that you are the owner…';
   renderATabs(); renderASection();
