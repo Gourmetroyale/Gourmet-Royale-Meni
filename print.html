@@ -56,6 +56,16 @@ button.gold{background:var(--gold);color:var(--wine);border-color:var(--gold)}
 .order span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .order button{padding:6px 10px;font-size:13px}
 .sum{display:flex;justify-content:space-between;font-weight:800;font-size:18px;color:var(--gold);font-variant-numeric:tabular-nums}
+.live{border-color:var(--gold)}
+.liveHead{display:flex;align-items:center;gap:10px}
+.dot{width:12px;height:12px;border-radius:50%;background:#9b7c6c;flex:none}
+.dot.on{background:#6fdc8c;box-shadow:0 0 0 4px rgba(111,220,140,.2)}
+.inbox{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--gold);color:var(--wine);font-weight:700}
+.inbox span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inbox button{background:var(--wine);color:var(--gold);border:0;padding:8px 12px}
+.pulse{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(232,196,106,.45)}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
 details summary{cursor:pointer;color:var(--gold);font-weight:700}
 #toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--gold);color:var(--wine);font-weight:700;padding:8px 16px;border-radius:999px;z-index:9;transition:opacity .3s;opacity:0;pointer-events:none}
 #printArea{display:none}
@@ -76,8 +86,15 @@ details summary{cursor:pointer;color:var(--gold);font-weight:700}
     <div><h1>Gourmet Royale</h1><p>Orders · kitchen ticket & customer invoice</p></div>
   </header>
 
+  <section class="card live">
+    <div class="liveHead"><span class="dot" id="dot"></span><h2 id="liveTitle">Live orders: off</h2></div>
+    <button id="liveBtn" class="gold" type="button">Start receiving orders</button>
+    <p class="hint" id="liveHint">Website orders arrive here by themselves with a beep. Keep this page open on the shop phone.</p>
+    <div class="list" id="inboxList"></div>
+  </section>
+
   <section class="card">
-    <h2>1 · Paste the WhatsApp order</h2>
+    <h2>1 · Order text (filled automatically, or paste from WhatsApp)</h2>
     <textarea id="msg" placeholder="Long-press the order in WhatsApp → Copy → paste here"></textarea>
     <div class="row">
       <button id="pasteBtn" class="gold" type="button">Paste from WhatsApp</button>
@@ -322,12 +339,12 @@ function print(which){
   const o=render();
   if(!o.items.length){toast('Paste an order first');return}
   const cs=which==='chef'?[$('cChef')]:which==='inv'?[$('cInv')]:[$('cChef'),$('cInv')];
-  saveOrder(o);
+  saveOrder(o);doneIncoming();
   location.href='intent:base64,'+escpos(cs)+'#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';
   toast('Sent to printer');
 }
 function systemPrint(){
-  const o=render();saveOrder(o);
+  const o=render();saveOrder(o);doneIncoming();
   $('printArea').innerHTML='';
   [$('cChef'),$('cInv')].forEach(c=>{const i=new Image();i.src=c.toDataURL();$('printArea').appendChild(i)});
   setTimeout(()=>window.print(),300);
@@ -361,6 +378,62 @@ function newOrder(){['msg','name','phone','addr','note'].forEach(id=>$(id).value
   $('no').value=day().next;savedNo=null;render()}
 function setType(v){orderType=v;[...$('typeSeg').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));$('addrWrap').hidden=v!=='Delivery';later()}
 
+/* ---------- live orders (website → ntfy → this page) ---------- */
+const TOPIC='gourmet-royale-orders-k7q2x9w4';
+let es=null,actx=null,wake=null,curIn=null;
+const inbox=()=>store.get('gr_inbox',[]);
+function beep(){
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;
+    [0,.28,.56].forEach(d=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=d===.56?1175:880;
+      g.gain.setValueAtTime(.5,t+d);g.gain.exponentialRampToValueAtTime(.001,t+d+.24);o.connect(g).connect(actx.destination);o.start(t+d);o.stop(t+d+.25)})}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([300,120,300])}catch(e){}
+}
+function addIncoming(id,time,text){
+  const seen=store.get('gr_seen',[]);if(seen.includes(id))return;seen.push(id);store.set('gr_seen',seen.slice(-300));
+  store.set('gr_since',time);
+  const box=inbox();
+  if(box.some(x=>x.text===text)||day().orders.slice(-5).some(r=>r.msg===text))return;
+  box.push({id,time,text});store.set('gr_inbox',box);
+  beep();toast('New order!');showInbox();
+  const t=$('msg').value.trim();
+  if(!t||t===SAMPLE.trim()||savedNo!==null)openIncoming(id);
+}
+function openIncoming(id){
+  const r=inbox().find(x=>x.id===id);if(!r)return;
+  newOrder();$('msg').value=r.text;if(parse(r.text).address)setType('Delivery');curIn=id;render();
+  $('pBoth').classList.add('pulse');scrollTo({top:0,behavior:'smooth'});
+}
+function doneIncoming(){
+  if(curIn){store.set('gr_inbox',inbox().filter(x=>x.id!==curIn));curIn=null;showInbox()}
+  $('pBoth').classList.remove('pulse');
+}
+function showInbox(){
+  const L=$('inboxList');L.innerHTML='';
+  inbox().forEach(r=>{const o=parse(r.text),d=document.createElement('div');d.className='inbox';
+    d.innerHTML='<span></span><button type="button">Open</button>';
+    d.children[0].textContent='New: '+(o.name||'order')+' · '+money(o.total)+' · '+timeStr(new Date(r.time*1000));
+    d.children[1].onclick=()=>openIncoming(r.id);L.appendChild(d)});
+}
+function status(on){$('dot').classList.toggle('on',on);$('liveTitle').textContent=on?'Live orders: on':'Live orders: connecting…'}
+async function keepAwake(){try{if(navigator.wakeLock&&document.visibilityState==='visible')wake=await navigator.wakeLock.request('screen')}catch(e){}}
+function connect(){
+  if(es)es.close();
+  const since=store.get('gr_since',null);
+  es=new EventSource(`https://ntfy.sh/${TOPIC}/sse?since=${since||'30m'}`);
+  status(false);
+  es.onopen=()=>status(true);
+  es.onerror=()=>status(false);
+  es.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.event&&m.event!=='message')return;
+    if(m.attachment&&m.attachment.url)fetch(m.attachment.url).then(r=>r.text()).then(t=>addIncoming(m.id,m.time,t));
+    else if(m.message)addIncoming(m.id,m.time,m.message)}catch(x){}};
+}
+function startLive(){
+  store.set('gr_live',true);beep();keepAwake();connect();
+  $('liveBtn').hidden=true;$('liveHint').textContent='Keep this page open and the screen on. New orders beep and load here; tap Print both.';
+}
+$('liveBtn').onclick=startLive;
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&store.get('gr_live',false)){keepAwake();connect()}});
+
 /* ---------- wiring ---------- */
 $('typeSeg').onclick=e=>{if(e.target.dataset.v)setType(e.target.dataset.v)};
 ['msg','no','name','phone','addr','note'].forEach(id=>$(id).addEventListener('input',later));
@@ -377,7 +450,8 @@ $('resetDay').onclick=()=>{store.set('gr_day',{date:today(),next:1,orders:[]});s
 $('width').value=store.get('gr_width','384');
 $('no').value=day().next;
 $('msg').value=SAMPLE;
-showToday();render();
+showToday();showInbox();render();
+if(store.get('gr_live',false)){connect();keepAwake();$('liveBtn').textContent='Tap to turn on sound';$('liveBtn').onclick=startLive}
 (document.fonts?document.fonts.load('800 20px Cairo').then(()=>document.fonts.load('600 20px Cairo')):Promise.resolve()).then(render,render);
 </script>
 </body>

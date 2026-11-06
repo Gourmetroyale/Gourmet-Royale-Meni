@@ -790,6 +790,7 @@ document.getElementById('orderClose').addEventListener('click', closeOrder);
 document.getElementById('send').addEventListener('click', e => {
   if (!cart.length){ e.preventDefault(); toast('Add something to your order first'); return; }
   updateSend();
+  try{ const t = orderText(); if (t !== window.__grSent){ window.__grSent = t; fetch('https://ntfy.sh/gourmet-royale-orders-k7q2x9w4', {method:'POST', body:t, keepalive:true}).catch(()=>{}); } }catch(err){}
   let left = false;
   const away = () => { if (document.visibilityState === 'hidden') left = true; };
   document.addEventListener('visibilitychange', away);
