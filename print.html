@@ -66,6 +66,11 @@ button.gold{background:var(--gold);color:var(--wine);border-color:var(--gold)}
 .pulse{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(232,196,106,.45)}}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+.rep{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rep div{background:var(--wine);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:2px}
+.rep small{color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.rep b{color:var(--gold);font-size:22px;font-variant-numeric:tabular-nums}
+.rep span{font-size:13px;color:var(--muted)}
 details summary{cursor:pointer;color:var(--gold);font-weight:700}
 #toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--gold);color:var(--wine);font-weight:700;padding:8px 16px;border-radius:999px;z-index:9;transition:opacity .3s;opacity:0;pointer-events:none}
 #printArea{display:none}
@@ -137,12 +142,24 @@ details summary{cursor:pointer;color:var(--gold);font-weight:700}
     <div class="sum"><span id="todayCount">0 orders</span><span id="todaySum">$0</span></div>
   </section>
 
+  <section class="card">
+    <h2>Income report</h2>
+    <div class="rep" id="rep"></div>
+    <h2 style="margin-top:6px">Best sellers this month</h2>
+    <div class="list" id="best"></div>
+    <div class="row">
+      <button id="xlsMonth" class="gold" type="button">Download this month (Excel)</button>
+      <button id="xlsAll" type="button">Download all orders</button>
+    </div>
+    <p class="hint">Every printed order is saved on this phone. Download the Excel file once a week as a backup, because clearing Chrome's data deletes the history.</p>
+  </section>
+
   <details class="card">
     <summary>Settings & help</summary>
     <label>Printer paper<select id="width"><option value="384">58 mm (RPP200)</option><option value="576">80 mm</option></select></label>
     <button id="sysPrint" type="button">Print with Android print menu instead</button>
     <p class="hint">Print buttons send the receipt straight to the RawBT app. Keep RawBT installed with the RPP200 selected and the printer switched on. If nothing prints, use the button above and pick RawBT as the printer.</p>
-    <button id="resetDay" type="button">Clear today's list and restart numbers at 1</button>
+    <button id="resetDay" type="button">Restart today's order numbers at 1 (saved orders are kept)</button>
   </details>
 </div>
 
@@ -358,6 +375,41 @@ function saveOrder(o){
   const rec={no,time:timeStr(o.when),name:o.name,total:o.total,msg:$('msg').value,phone:$('phone').value,addr:$('addr').value,note:$('note').value,type:orderType,pay:o.pay};
   const i=d.orders.findIndex(x=>x.no===no);if(i>=0)d.orders[i]=rec;else d.orders.push(rec);
   d.next=Math.max(d.next,(+no||0)+1);store.set('gr_day',d);savedNo=no;showToday();
+  const all=store.get('gr_all',[]),date=today();
+  const full={date,no,time:rec.time,name:o.name||'',phone:o.phone||'',type:orderType,address:o.address||'',deliveryTime:o.dtime||'',
+    items:o.items.map(i=>`${i.qty}x ${i.name}`).join(' | '),qtys:o.items.map(i=>[i.name.replace(/\s*\(.*$/,'').replace(/:.*$/,'').trim(),i.qty]),
+    payment:o.pay,total:o.total||0,msg:rec.msg};
+  const j=all.findIndex(x=>x.date===date&&x.no===no);if(j>=0)all[j]=full;else all.push(full);
+  store.set('gr_all',all);showReport();
+  if(SHEET_URL)try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(full)})}catch(e){}
+}
+const SHEET_URL='';
+function showReport(){
+  const all=store.get('gr_all',[]),t=today(),m=t.slice(0,7);
+  const wk=new Date();wk.setDate(wk.getDate()-6);const w=wk.toLocaleDateString('en-CA');
+  const sum=f=>{const r=all.filter(f);return [r.length,r.reduce((s,x)=>s+(x.total||0),0)]};
+  const parts=[['Today',sum(x=>x.date===t)],['Last 7 days',sum(x=>x.date>=w)],['This month',sum(x=>x.date.startsWith(m))],['All time',sum(()=>1)]];
+  const R=$('rep');R.innerHTML='';
+  parts.forEach(([l,[n,v]])=>{const d=document.createElement('div');d.innerHTML='<small></small><b></b><span></span>';
+    d.children[0].textContent=l;d.children[1].textContent=money(v);d.children[2].textContent=n+(n===1?' order':' orders');R.appendChild(d)});
+  const cnt={};all.filter(x=>x.date.startsWith(m)).forEach(x=>(x.qtys||[]).forEach(([k,q])=>cnt[k]=(cnt[k]||0)+q));
+  const B=$('best');B.innerHTML='';
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!top.length)B.innerHTML='<p class="hint">Appears after your first orders this month.</p>';
+  top.forEach(([k,q])=>{const r=document.createElement('div');r.className='order';r.innerHTML='<span></span><strong></strong>';
+    r.children[0].textContent=k;r.children[1].textContent=q+' sold';B.appendChild(r)});
+}
+function downloadXls(onlyMonth){
+  const m=today().slice(0,7),rows=store.get('gr_all',[]).filter(x=>!onlyMonth||x.date.startsWith(m));
+  if(!rows.length){toast('No orders saved yet');return}
+  const head=['Date','Time','Order #','Customer','Phone','Type','Address','Delivery time','Items','Payment','Total ($)'];
+  const q=v=>{v=String(v==null?'':v);if(/^[=+\-@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'};
+  const lines=[head.map(q).join(',')].concat(rows.map(r=>[r.date,r.time,r.no,r.name,r.phone,r.type,r.address,r.deliveryTime,r.items,r.payment,r.total].map((v,i)=>i===10?v:q(v)).join(',')));
+  lines.push(['','','','','','','','','','TOTAL',rows.reduce((s,r)=>s+(r.total||0),0)].map((v,i)=>i>=9?(i===9?q(v):v):'').join(','));
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='gourmet-royale-orders-'+(onlyMonth?m:'all')+'.csv';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('Excel file downloaded');
 }
 function showToday(){
   const d=day(),L=$('todayList');L.innerHTML='';
@@ -445,12 +497,13 @@ $('tabChef').onclick=()=>{$('cChef').hidden=false;$('cInv').hidden=true;$('tabCh
 $('tabInv').onclick=()=>{$('cChef').hidden=true;$('cInv').hidden=false;$('tabChef').setAttribute('aria-pressed',false);$('tabInv').setAttribute('aria-pressed',true)};
 $('pChef').onclick=()=>print('chef');$('pInv').onclick=()=>print('inv');$('pBoth').onclick=()=>print('both');
 $('sysPrint').onclick=systemPrint;
+$('xlsMonth').onclick=()=>downloadXls(true);$('xlsAll').onclick=()=>downloadXls(false);
 $('resetDay').onclick=()=>{store.set('gr_day',{date:today(),next:1,orders:[]});showToday();newOrder();toast('Today cleared')};
 
 $('width').value=store.get('gr_width','384');
 $('no').value=day().next;
 $('msg').value=SAMPLE;
-showToday();showInbox();render();
+showToday();showInbox();showReport();render();
 if(store.get('gr_live',false)){connect();keepAwake();$('liveBtn').textContent='Tap to turn on sound';$('liveBtn').onclick=startLive}
 (document.fonts?document.fonts.load('800 20px Cairo').then(()=>document.fonts.load('600 20px Cairo')):Promise.resolve()).then(render,render);
 </script>
